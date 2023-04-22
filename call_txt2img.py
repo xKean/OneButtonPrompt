@@ -63,7 +63,7 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
     api.util_set_model(randomModel)
     
     runs = 0
-    isGoodNumber = 7.6
+    isGoodNumber = 7.5
     while foundgood == False: 
 
         response = api.txt2img(
