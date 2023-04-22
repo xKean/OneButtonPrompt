@@ -98,6 +98,7 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
                 isGoodNumber -= 0.5
                 runs = 0
             os.remove(outputTXT2IMGFull)
+            runs +=1
                 
 
 

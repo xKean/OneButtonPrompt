@@ -17,7 +17,7 @@ from call_extras import *
 # C:\automated_output\txt2img\
 # C:\automated_output\Prompts\
 
-loops = 20  # amount of images to generate
+loops = 150  # amount of images to generate
 steps = 0
 
 while steps < loops:
