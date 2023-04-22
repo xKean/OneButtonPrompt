@@ -4,49 +4,52 @@ import io
 import base64
 import uuid
 from PIL import Image, PngImagePlugin
+import webuiapi
 
 
 
-def call_extras(imagelocation):
+def call_extras(oldResult, randomModel = 'rmadaMergeSD21768_v70'):
 
-    imagewip = Image.open(imagelocation)
+    image = oldResult.image
     #rest of prompt things
     upscaling_resize = "2"
     upscaler_1 = "4x-UltraSharp"
     upscaler_2 = "R-ESRGAN 4x+"
     
-    with open(imagelocation, "rb") as image_file:
-       encoded_string = base64.b64encode(image_file.read())
-    encodedstring2 = encoded_string.decode('utf-8')
     #params to stay the same
-    url = "http://127.0.0.1:7860"
-    outputextrasfolder = 'C:\\automated_output\\extras\\'
+    outputextrasfolder = 'C:/automated_output/extras/'
     outputextrasilename = str(uuid.uuid4())
     outputextraspng = '.png'
     outputextrasFull = '{}{}{}'.format(outputextrasfolder,outputextrasilename,outputextraspng)
 
 
-    payload = {
-        "upscaling_resize": upscaling_resize,
-        "upscaler_1": upscaler_1,
-        "image": encodedstring2,
-        "resize_mode": 0,
-        "show_extras_results": "false",
-        "gfpgan_visibility": 0,
-        "codeformer_visibility": 0.15,
-        "codeformer_weight": 0.1,
-        "upscaling_crop": "false",
-        "upscaler_2": upscaler_2,
-        "extras_upscaler_2_visibility": 0.5,
-        "upscale_first": "true",
-        "rb_enabled": "false",  # the remove backgrounds plugin is  automatically turned on, need to turn it off
-        "models": "None" # the remove backgrounds plugin is  automatically turned on, need to turn it off
-    }
+    api = webuiapi.WebUIApi(host='127.0.0.1',
+                        port=7860,
+                        sampler='DPM++ 2M Karras',
+                        steps="35")
+    
+    api.util_set_model(randomModel)
+    
 
 
-    response = requests.post(url=f'{url}/sdapi/v1/extra-single-image', json=payload)
+    result = api.extra_single_image( image=image,
+                                    resize_mode=0,
+                                    show_extras_results= False,
+                                    upscaler_1= upscaler_1,
+                                    upscaling_resize= upscaling_resize,
+                                    gfpgan_visibility= 0,
+                                    codeformer_visibility= 0.15,
+                                    codeformer_weight= 0.1,
+                                    upscaling_crop= False,
+                                    upscaler_2= upscaler_2,
+                                    extras_upscaler_2_visibility= 0.5,
+                                    upscale_first= True
+    )
+    
+    r = result.image
 
-    image = Image.open(io.BytesIO(base64.b64decode(response.json().get("image"))))
-    image.save(outputextrasFull)
+    pnginfo = PngImagePlugin.PngInfo()
+    pnginfo.add_text('parameters', oldResult.image.info["parameters"])
+    r.save(outputextrasFull, pnginfo=pnginfo)
 
-    return outputextrasFull
+    return result

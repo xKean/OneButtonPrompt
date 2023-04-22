@@ -31,3 +31,45 @@ def novel_dist(insanitylevel):
         if(roll):
             print("Uh, something novel has been added to the prompt. Interesting.")
         return roll
+
+def generateRandomNegative():
+    opt_negative ="ng_deepnegative_v1_75t, "
+
+    if random.random() < .5:
+        opt_negative+= "nrealfixer, nfixer,"
+    if random.random() < .5:
+        opt_negative+= "rmadanegative"
+
+    print("Negativ: "+ opt_negative)
+    return opt_negative
+
+def generateRandomModel():
+    randNum = random.randrange(5)
+    if randNum == 0:
+        model = 'colorful_v26'
+    elif randNum == 1:
+        model = 'lyriel_v14'
+    elif randNum == 2:
+        model = 'revAnimated_v122'
+    elif randNum == 3:
+        model = 'rmadaMergeSD21768_v70'
+    elif randNum == 4:
+        model = 'ultrm_v10'
+    else:
+        model = 'rmadaMergeSD21768_v70'
+
+    print("Model: "+ model)
+    return model
+
+def generateRandomRatio():
+    randNum = random.randrange(5)
+    if randNum == 0:
+        return "portrait"
+    elif randNum == 1:
+        return "wide"
+    elif randNum == 2:
+        return "ultrawide"
+    elif randNum == 3:
+        return "square"
+    else:
+        return "normal"

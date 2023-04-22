@@ -1,18 +1,24 @@
 import json
+import os
 import requests
 import io
 import base64
 import uuid
+import webuiapi
 from PIL import Image, PngImagePlugin
+from aesthetic import aestheticscorer
 
-def call_txt2img(passingprompt,ratio,upscale,debugmode):
+from random_functions import generateRandomNegative
+
+def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMergeSD21768_v70'):
 
     #set the prompt!
     prompt = passingprompt
+    foundgood = False
 
     #rest of prompt things
-    sampler_index = "DPM2 Karras"
-    steps = "20"
+    sampler_index = 'DPM++ 2M Karras'
+    steps = "35"
     if(debugmode==1):
         steps="10"
     cfg_scale = "7"
@@ -28,67 +34,71 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode):
         width = "1280"
         height = "360"
     else:
-        width = "512"
-        height = "512"
+        width = "768"
+        height = "768"
     #upscaler
     enable_hr = upscale
     if(debugmode==1):
         enable_hr="False"
-    denoising_strength = "0.35"
+    denoising_strength = "0.4"
     hr_scale = "2"
-    hr_upscaler = "4x-UltraSharp"
+    hr_upscaler = "R-ESRGAN 4x+"
     hr_second_pass_steps = str(round(int(steps)/2))
 
     
 
     #params to stay the same
-    url = "http://127.0.0.1:7860"
-    outputTXT2IMGfolder = 'C:\\automated_output\\txt2img\\'
+    outputTXT2IMGfolder = 'C:/automated_output/txt2img/'
     outputTXT2IMGfilename = str(uuid.uuid4())
     outputTXT2IMGpng = '.png'
     outputTXT2IMGFull = '{}{}{}'.format(outputTXT2IMGfolder,outputTXT2IMGfilename,outputTXT2IMGpng)
-    outputTXT2IMGtxtfolder = 'C:\\automated_output\\prompts\\'
+    outputTXT2IMGtxtfolder = 'C:/automated_output/prompts/'
     outputTXT2IMGtxt = '.txt'
     outputTXT2IMGtxtFull = '{}{}{}'.format(outputTXT2IMGtxtfolder,outputTXT2IMGfilename,outputTXT2IMGtxt)
 
+    api = webuiapi.WebUIApi(host='127.0.0.1',
+                            port=7860,
+                            sampler=sampler_index,
+                            steps=steps)
+    api.util_set_model(randomModel)
+    
+    runs = 0
+    isGoodNumber = 7.6
+    while foundgood == False: 
+
+        response = api.txt2img(
+                        prompt=prompt,
+                        negative_prompt=generateRandomNegative(),
+                        seed=-1,
+                        sampler_name= sampler_index,
+                        height=height,
+                        width=width,
+                        steps=steps,
+                        cfg_scale=cfg_scale,
+                            enable_hr=enable_hr,
+                            hr_scale=hr_scale,
+                            hr_upscaler=hr_upscaler,
+                            denoising_strength=denoising_strength,
+                            hr_second_pass_steps = hr_second_pass_steps
+                        )
 
 
-    #call TXT2IMG
+        r = response.image
 
-    payload = {
-        "prompt": prompt,
-        "sampler_index": sampler_index,
-        "steps": steps,
-        "cfg_scale": cfg_scale,
-        "width": width,
-        "height": height,
-        "enable_hr": enable_hr,
-        "denoising_strength": denoising_strength,
-        "hr_scale": hr_scale,
-        "hr_upscaler": hr_upscaler,
-        "hr_second_pass_steps": hr_second_pass_steps
-
-    }
-
-    response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-
-    r = response.json()
-
-    for i in r['images']:
-        image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-
-        png_payload = {
-            "image": "data:image/png;base64," + i
-        }
-        response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
 
         pnginfo = PngImagePlugin.PngInfo()
-        pnginfo.add_text("parameters", response2.json().get("info"))
-        image.save(outputTXT2IMGFull, pnginfo=pnginfo)
-    
+        pnginfo.add_text('parameters', r.info["parameters"])
+        r.save(outputTXT2IMGFull, pnginfo=pnginfo)
+        score = aestheticscorer.aesthetic_score(outputTXT2IMGFull)
+        if score >= isGoodNumber or debugmode == 1:
+                
+            foundgood = True
+        else:
+            if runs > 50:
+                isGoodNumber -= 0.5
+                runs = 0
+            os.remove(outputTXT2IMGFull)
+                
 
-    with open(outputTXT2IMGtxtFull,'w',encoding="utf8") as txt:
-        json_object = json.dumps(payload, indent = 4)
-        txt.write(json_object)
 
-    return outputTXT2IMGFull
+    return response

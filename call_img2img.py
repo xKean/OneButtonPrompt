@@ -4,79 +4,61 @@ import io
 import base64
 import uuid
 from PIL import Image, PngImagePlugin
+import webuiapi
+
+from random_functions import generateRandomNegative
 
 
 
-def call_img2img(imagelocation, denoising_strength = 0.25, scale = 1.5, padding = 64):
+def call_img2img(resultOld, denoising_strength = 0.25, scale = 1.5, padding = 64, upscaler = "LDSR", randomModel = 'rmadaMergeSD21768_v70'):
 
+    image = resultOld.image
        #params to stay the same
-    url = "http://127.0.0.1:7860"
-    outputimg2imgfolder = 'C:\\automated_output\\img2img\\'
+    outputimg2imgfolder = 'C:/automated_output/img2img/'
     outputimg2imgfilename = str(uuid.uuid4())
     outputimg2imgpng = '.png'
     outputimg2imgFull = '{}{}{}'.format(outputimg2imgfolder,outputimg2imgfilename,outputimg2imgpng)
 
-
-    encodedstringlist = []
     #rest of prompt things
 
-    sampler_index = "DPM2 Karras"
-    steps = "20"
+    sampler_index = 'DPM++ 2M Karras'
+    steps = "35"
     prompt = "hello world"
     cfg_scale = "7"
     width = "512"
     height = "512"
 
-    with open(imagelocation, "rb") as image_file:
-       encoded_string = base64.b64encode(image_file.read())
-    encodedstringlist.append(encoded_string.decode('utf-8'))
-    encodedstring2 = encoded_string.decode('utf-8')
 
+    api = webuiapi.WebUIApi(host='127.0.0.1',
+                            port=7860,
+                            sampler=sampler_index,
+                            steps=steps)
+    api.util_set_model(randomModel)
 
-    # prompt from picture?
-    png_payload = {
-            "image": encodedstring2
-        }
-    response3 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+    response = api.img2img(
+                    images=[image], 
+                    prompt=prompt,
+                    negative_prompt=generateRandomNegative(),
+                    seed=-1,
+                    resize_mode= 0,
+                    denoising_strength= denoising_strength,
+                    sampler_name= sampler_index,
+                    height=height,
+                    width=width,
+                    steps=steps,
+                    batch_size= 8,
+                    cfg_scale=cfg_scale,
+                        script_name = "SD upscale",
+                        script_args = ["",padding, upscaler,scale]
+                    )
 
-    pnginfo = str(response3.json().get("info"))
+    
+    r = response.image
 
-    prompt = pnginfo[:pnginfo.rfind("Steps")]
+    pnginfo = PngImagePlugin.PngInfo()
+    pnginfo.add_text('parameters', resultOld.image.info["parameters"])
+    response.image.info = resultOld.image.info
+    r.save(outputimg2imgFull, pnginfo=pnginfo)
 
-    payload = {
-        "resize_mode": 0,
-        "denoising_strength": denoising_strength,
-        "sampler_index": sampler_index,  
-        "batch_size": "1",
-        "n_iter": "1",
-        "prompt": prompt,
-        "steps": steps,
-        "cfg_scale": cfg_scale,
-        "width": width,
-        "height": height,
-        "include_init_images": "true",
-        "init_images": encodedstringlist,
-        "script_name": "SD upscale",
-        "script_args": ["",padding,"4x-UltraSharp",scale]
-    }
-
-
-    #
-    response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload)
-
-    r = response.json()
-
-    for i in r['images']:
-        image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-
-        png_payload = {
-        "image": "data:image/png;base64," + i
-        }
-        response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-
-        pnginfo = PngImagePlugin.PngInfo()
-        pnginfo.add_text("parameters", response2.json().get("info"))
-        image.save(outputimg2imgFull, pnginfo=pnginfo)
-
-    return outputimg2imgFull
+    return response
 

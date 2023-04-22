@@ -1,4 +1,7 @@
 import sys, os
+from PIL import Image, PngImagePlugin
+from aesthetic import aestheticscorer
+
 sys.path.append(os.path.abspath(".."))
 
 from call_txt2img import *
@@ -19,19 +22,18 @@ steps = 0
 
 while steps < loops:
     # build prompt
-    randomprompt = build_dynamic_prompt(7,"all","all","all")
+    randomprompt = build_dynamic_prompt(6,"all","all","all")
+    randomModel = generateRandomModel()
     
     # prompt + size
+    #check if any good
+    txt2img = call_txt2img(randomprompt, generateRandomRatio(), False, 0, randomModel)
 
-    #txt2img = call_txt2img(randomprompt, "portrait",True,0)
-    #txt2img = call_txt2img(randomprompt, "wide" ,True, 0)
-    #txt2img = call_txt2img(randomprompt, "ultrawide",True,0)
-    #txt2img = call_txt2img(randomprompt, "square",True,0)
-    
     # upscale via img2img first
-    #img2img = call_img2img(txt2img,0.25,1.5,256)
+    img2img = call_img2img(txt2img,0.35,1.5,256, "LDSR", randomModel)
+    niceImg = call_img2img(img2img,0.25,2,256, "R-ESRGAN 4x+", randomModel)
 
     # upscale via extras upscaler next
-    #finalfile = call_extras(img2img)
+    finalfile = call_extras(niceImg, randomModel)
 
     steps += 1
