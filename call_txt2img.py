@@ -42,7 +42,7 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
         enable_hr="False"
     denoising_strength = "0.4"
     hr_scale = "2"
-    hr_upscaler = "R-ESRGAN 4x+"
+    hr_upscaler = "4x-UltraMix_Balanced"
     hr_second_pass_steps = str(round(int(steps)/2))
 
     
@@ -63,7 +63,7 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
     api.util_set_model(randomModel)
     
     runs = 0
-    isGoodNumber = 7.5
+    isGoodNumber = 6.8
     while foundgood == False: 
 
         response = api.txt2img(

@@ -42,7 +42,7 @@ def call_extras(oldResult, randomModel = 'rmadaMergeSD21768_v70'):
                                     codeformer_weight= 0.1,
                                     upscaling_crop= False,
                                     upscaler_2= upscaler_2,
-                                    extras_upscaler_2_visibility= 0.5,
+                                    extras_upscaler_2_visibility= 0.1,
                                     upscale_first= True
     )
     

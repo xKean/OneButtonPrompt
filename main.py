@@ -30,8 +30,8 @@ while steps < loops:
     txt2img = call_txt2img(randomprompt, generateRandomRatio(), False, 0, randomModel)
 
     # upscale via img2img first
-    img2img = call_img2img(txt2img,0.35,1.5,256, "LDSR", randomModel)
-    niceImg = call_img2img(img2img,0.25,2,256, "R-ESRGAN 4x+", randomModel)
+    img2img = call_img2img(txt2img,0.25,1.5,256, "SwinIR_4x", randomModel)
+    niceImg = call_img2img(img2img,0.3,2,256, "4x-UltraMix_Balanced", randomModel)
 
     # upscale via extras upscaler next
     finalfile = call_extras(niceImg, randomModel)
