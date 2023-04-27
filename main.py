@@ -37,16 +37,12 @@ steps = 0
 #while steps < loops:
 while True:
     # build prompt
-<<<<<<< HEAD
-    randomprompt = build_dynamic_prompt(6,"all","none","all")
+    randomprompt = build_dynamic_prompt(6,"all","none","all", False)
     randomModel = generateRandomModel()
 
     chosen_options = random.sample(options, 2)
     result = ", ".join(chosen_options)
     randomprompt += ", "+result
-=======
-    randomprompt = build_dynamic_prompt(7,"all","all","all", False)
->>>>>>> 0df5d932e46b0f866cf8edac5ab906867f7e7892
     
     # prompt + size
     #check if any good
