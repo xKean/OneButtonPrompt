@@ -24,7 +24,7 @@ def call_img2img(resultOld, denoising_strength = 0.25, scale = 1.5, padding = 64
     sampler_index = 'DPM++ 2M Karras'
     steps = "35"
     prompt = "hello world"
-    cfg_scale = "7"
+    cfg_scale = 6
     width = "512"
     height = "512"
 
@@ -34,6 +34,10 @@ def call_img2img(resultOld, denoising_strength = 0.25, scale = 1.5, padding = 64
                             sampler=sampler_index,
                             steps=steps)
     api.util_set_model(randomModel)
+    if randomModel == "revAnimated_v122" or "dreamshaper_5BakedVae":
+        apiOptions = api.get_options()
+        apiOptions["CLIP_stop_at_last_layers"] = 2
+        api.set_options(apiOptions)
 
     response = api.img2img(
                     images=[image], 

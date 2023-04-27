@@ -15,6 +15,8 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
     #set the prompt!
     prompt = passingprompt
     foundgood = False
+    negative_prompt = generateRandomNegative()
+
 
     #rest of prompt things
     sampler_index = 'DPM++ 2M Karras'
@@ -61,19 +63,28 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
                             sampler=sampler_index,
                             steps=steps)
     api.util_set_model(randomModel)
+    if randomModel == "revAnimated_v122" or "dreamshaper_5BakedVae":
+        apiOptions = api.get_options()
+        apiOptions["CLIP_stop_at_last_layers"] = 2
+        api.set_options(apiOptions)
     
     runs = 0
-    isGoodNumber = 6.8
+    goodNumber = 7
+    overallRuns = 0
+    averageScoreLast5 = 0
+    bestResult = 0
+    bestResultScore = 0
     while foundgood == False: 
 
         response = api.txt2img(
                         prompt=prompt,
-                        negative_prompt=generateRandomNegative(),
+                        negative_prompt=negative_prompt,
                         seed=-1,
                         sampler_name= sampler_index,
                         height=height,
                         width=width,
                         steps=steps,
+                        
                         cfg_scale=cfg_scale,
                             enable_hr=enable_hr,
                             hr_scale=hr_scale,
@@ -90,16 +101,39 @@ def call_txt2img(passingprompt,ratio,upscale,debugmode, randomModel = 'rmadaMerg
         pnginfo.add_text('parameters', r.info["parameters"])
         r.save(outputTXT2IMGFull, pnginfo=pnginfo)
         score = aestheticscorer.aesthetic_score(outputTXT2IMGFull)
-        if score >= isGoodNumber or debugmode == 1:
+        
+        averageScoreLast5 += score
+        if score >= goodNumber or debugmode == 1:
                 
             foundgood = True
         else:
-            if runs > 50:
-                isGoodNumber -= 0.5
+            if runs == 10:
+                goodNumber -= 0.5
                 runs = 0
+                print("Reduced difficulty to "+str(goodNumber))
             os.remove(outputTXT2IMGFull)
             runs +=1
+            overallRuns +=1
+
+            if(overallRuns % 10 == 0 and not overallRuns == 0 and averageScoreLast5 < 55):
+                return ""
+            
+
+            
+            if overallRuns == 25:
+                return bestResult
+            
+            if overallRuns == 1:
+                bestResult = response
+                bestResultScore = score
+
+            if(overallRuns > 1):
+                if bestResultScore < score:
+                    bestResultScore = score
+                    bestResult = response
                 
 
 
+    if(bestResultScore > score):
+        return bestResult
     return response

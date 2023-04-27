@@ -29,6 +29,10 @@ def call_extras(oldResult, randomModel = 'rmadaMergeSD21768_v70'):
                         steps="35")
     
     api.util_set_model(randomModel)
+    if randomModel == "revAnimated_v122" or "dreamshaper_5BakedVae":
+        apiOptions = api.get_options()
+        apiOptions["CLIP_stop_at_last_layers"] = 2
+        api.set_options(apiOptions)
     
 
 

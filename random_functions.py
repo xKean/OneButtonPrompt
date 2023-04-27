@@ -44,19 +44,19 @@ def generateRandomNegative():
     return opt_negative
 
 def generateRandomModel():
-    randNum = random.randrange(5)
-    if randNum == 0:
+    randNum = random.randrange(12)
+    if randNum <1 :
         model = 'colorful_v26'
-    elif randNum == 1:
-        model = 'lyriel_v14'
-    elif randNum == 2:
+    elif randNum <3 :
+        model = 'lyriel_v15'
+    elif randNum <6 :
         model = 'revAnimated_v122'
-    elif randNum == 3:
+    elif randNum <9 :
         model = 'rmadaMergeSD21768_v70'
-    elif randNum == 4:
-        model = 'ultrm_v10'
+    elif randNum < 12:
+        model = 'dreamshaper_5BakedVae'
     else:
-        model = 'rmadaMergeSD21768_v70'
+        model = 'revAnimated_v122'
 
     print("Model: "+ model)
     return model
