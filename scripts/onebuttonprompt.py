@@ -10,7 +10,7 @@ from modules.shared import opts, cmd_opts, state
 from build_dynamic_prompt import *
 
 subjects = ["all","object","animal","humanoid", "landscape", "concept"]
-artists = ["all", "none"]
+artists = ["all", "none", "popular", "greg mode", "3D",	"abstract",	"angular", "anime"	,"architecture",	"art nouveau",	"art deco",	"baroque",	"bauhaus", 	"cartoon",	"character",	"children's illustration", 	"cityscape", 	"clean",	"cloudscape",	"collage",	"colorful",	"comics",	"cubism",	"dark",	"detailed", 	"digital",	"expressionism",	"fantasy",	"fashion",	"fauvism",	"figurativism",	"gore",	"graffiti",	"graphic design",	"high contrast",	"horror",	"impressionism",	"installation",	"landscape",	"light",	"line drawing",	"low contrast",	"luminism",	"magical realism",	"manga",	"melanin",	"messy",	"monochromatic",	"nature",	"nudity",	"photography",	"pop art",	"portrait",	"primitivism",	"psychedelic",	"realism",	"renaissance",	"romanticism",	"scene",	"sci-fi",	"sculpture",	"seascape",	"space",	"stained glass",	"still life",	"storybook realism",	"street art",	"streetscape",	"surrealism",	"symbolism",	"textile",	"ukiyo-e",	"vibrant",	"watercolor",	"whimsical"]
 imagetypes = ["all", "all - force multiple",  "photograph", "octane render","digital art","concept art", "painting", "portrait", "anime key visual", "only other types"]
 promptmode = ["at the back", "in the front"]
 promptcompounder = ["1", "2", "3", "4", "5"]
@@ -44,13 +44,13 @@ class Script(scripts.Script):
             with gr.Row():
                 insanitylevel = gr.Slider(1, 10, value=7, step=1, label="Higher levels increases complexity and randomness of generated prompt")
             with gr.Row():
-                with gr.Column():
+                with gr.Column(scale=1, variant="compact"):
                     subject = gr.Dropdown(
                                     subjects, label="Subject Types", value="all")
-                with gr.Column():
+                with gr.Column(scale=1, variant="compact"):
                     artist = gr.Dropdown(
                                     artists, label="Artists", value="all")
-                with gr.Column():
+                with gr.Column(scale=2, variant="compact"):
                     imagetype = gr.Dropdown(
                                     imagetypes, label="type of image", value="all")
             with gr.Row():
@@ -158,37 +158,38 @@ class Script(scripts.Script):
             with gr.Row():
                 genprom = gr.Button("Generate me some prompts!")
             with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=4):
                         prompt1 = gr.Textbox(label="prompt 1")
-                    with gr.Column():
-                        prompt1toworkflow = gr.Button("Send this to workflow prompt")
+                    with gr.Column(scale=1, variant="compact"):
+                        prompt1toworkflow = gr.Button("Send prompt up")
             with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=4):
                         prompt2 = gr.Textbox(label="prompt 2")
-                    with gr.Column():
-                        prompt2toworkflow = gr.Button("Send this to workflow prompt")
+                    with gr.Column(scale=1, variant="compact"):
+                        prompt2toworkflow = gr.Button("Send prompt up")
             with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=4):
                         prompt3 = gr.Textbox(label="prompt 3")
-                    with gr.Column():
-                        prompt3toworkflow = gr.Button("Send this to workflow prompt")
+                    with gr.Column(scale=1, variant="compact"):
+                        prompt3toworkflow = gr.Button("Send prompt up")
             with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=4):
                         prompt4 = gr.Textbox(label="prompt 4")
-                    with gr.Column():
-                        prompt4toworkflow = gr.Button("Send this to workflow prompt")
+                    with gr.Column(scale=1, variant="compact"):
+                        prompt4toworkflow = gr.Button("Send prompt up")
             with gr.Row():
-                    with gr.Column():
+                    with gr.Column(scale=4):
                         prompt5 = gr.Textbox(label="prompt 5")
-                    with gr.Column():
-                        prompt5toworkflow = gr.Button("Send this to workflow prompt")
+                    with gr.Column(scale=1, variant="compact"):
+                        prompt5toworkflow = gr.Button("Send prompt up")
         with gr.Tab("Advanced"):
             with gr.Row():
-                promptcompounderlevel = gr.Dropdown(
-                    promptcompounder, label="Prompt compounder", value="1")
-            with gr.Row():
-                ANDtoggle = gr.Dropdown(
-                    ANDtogglemode, label="Prompt seperator mode", value="comma")
+                with gr.Column(scale=1):
+                    promptcompounderlevel = gr.Dropdown(
+                        promptcompounder, label="Prompt compounder", value="1")
+                with gr.Column(scale=2):
+                    ANDtoggle = gr.Dropdown(
+                        ANDtogglemode, label="Prompt seperator mode", value="comma")
             with gr.Row():
                 gr.Markdown(
                     """
@@ -253,6 +254,8 @@ class Script(scripts.Script):
         
         images = []
         infotexts = []
+        all_seeds = []
+        all_prompts = []
 
         batches = p.n_iter
         initialbatchsize = p.batch_size
@@ -260,6 +263,7 @@ class Script(scripts.Script):
         p.n_iter = 1
         p.batch_size = 1
         originalprompt = p.prompt
+
 
         if(silentmode and workprompt != ""):
             print("Workflow mode turned on, not generating a prompt. Using workflow prompt.")
@@ -332,6 +336,8 @@ class Script(scripts.Script):
                 processed = process_images(p)
                 images += processed.images
                 infotexts += processed.infotexts
+                all_seeds.append(processed.seed)
+                all_prompts.append(processed.prompt)
             
                 # Only move up a seed, when there are multiple batchsizes, and we had the first one done.
                 if(initialbatchsize != 1):
@@ -341,4 +347,4 @@ class Script(scripts.Script):
         # just return all the things
         p.n_iter = 0
         p.batch_size = 0
-        return Processed(p=p, images_list=images, info=infotexts[0], infotexts=infotexts)
+        return Processed(p=p, images_list=images, info=infotexts[0], infotexts=infotexts, all_seeds=all_seeds, all_prompts=all_prompts)
